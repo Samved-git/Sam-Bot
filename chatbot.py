@@ -18,7 +18,7 @@ if "messages" not in st.session_state:
     ]
 
 # Initialize Google Generative AI model with a supported model name
-llm = ChatGoogleGenerativeAI(model="chat-bison@001")  # use a verified available model
+llm = ChatGoogleGenerativeAI(model="chat-bison@001")  # Use verified available Google Gen AI model
 
 # Create conversation chain with memory and LLM
 conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
@@ -39,7 +39,4 @@ if st.session_state.messages[-1]["role"] != "assistant":
             try:
                 response = conversation.predict(input=prompt)
                 st.write(response)
-                st.session_state.messages.append({"role": "assistant", "content": response})
-            except Exception as e:
-                st.error(f"API call error: {e}")
-                st.session_state.messages.append({"role": "assistant", "content": "Sorry, something went wrong."})
+                st.session_state.messages.append({"role": "assistant", "content": response
