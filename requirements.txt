@@ -1,0 +1,5 @@
+streamlit
+streamlit-chat
+langchain>=0.0.221
+langchain-google-genai>=2.1.11
+google-genai>=0.2.0
