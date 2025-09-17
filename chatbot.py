@@ -23,8 +23,8 @@ llm = ChatGoogleGenerativeAI(model="gemini-pro")  # or use "gemini-2.5-flash" et
 # Create conversation chain with memory and LLM
 conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
 
-st.title("🗣️ Conversational Chatbot with Google Generative AI")
-st.subheader("Simple Chat Interface for LLMs by Build Fast with AI")
+st.title("🗣️ Conversational Chatbot sam-bot")
+st.subheader("Simple Chat Interface")
 
 if prompt := st.chat_input("Your question"):
     st.session_state.messages.append({"role": "user", "content": prompt})
