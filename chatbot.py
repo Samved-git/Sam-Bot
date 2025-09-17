@@ -39,4 +39,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
             try:
                 response = conversation.predict(input=prompt)
                 st.write(response)
-                st.session_state.messages.append({"role": "assistant", "content": response
+                st.session_state.messages.append({"role": "assistant", "content": response})
+            except Exception as e:
+                st.error(f"API call error: {e}")
+                st.session_state.messages.append({"role": "assistant", "content": "Sorry, something went wrong."})
