@@ -17,8 +17,8 @@ if "messages" not in st.session_state:
         {"role": "assistant", "content": "How can I help you today?"}
     ]
 
-# Initialize Google Generative AI model with a supported model name
-llm = ChatGoogleGenerativeAI(model="chat-bison@001")  # Use verified available Google Gen AI model
+# Initialize Google Generative AI model with correct supported model name
+llm = ChatGoogleGenerativeAI(model="gemini-pro")  # Use a valid model name from your Google Cloud project
 
 # Create conversation chain with memory and LLM
 conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
