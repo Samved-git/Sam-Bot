@@ -6,34 +6,30 @@ from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 import os
 import time
 
-# Set API key from secrets
+# Load API key
 os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
 
-# Initialize session state for memory & messages
+# Limit user input length to reduce token usage
+MAX_INPUT_LENGTH = 200  # characters
+
+# Initialize session storage for memory, messages, and cache
 if 'buffer_memory' not in st.session_state:
-    st.session_state.buffer_memory = ConversationBufferWindowMemory(k=3, return_messages=True)
+    st.session_state.buffer_memory = ConversationBufferWindowMemory(k=2, return_messages=True)  # smaller window
+
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "assistant", "content": "How can I help you today?"}]
 
-# Initialize Google GenAI model with a supported model name
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", location="global")
+if "cache" not in st.session_state:
+    st.session_state.cache = {}
 
-# Create conversation chain
+# Use a more efficient model variant
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", location="global")
+
 conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
 
 st.title("🗣️ Conversational Chatbot sam-bot")
-st.subheader("Optimized for performance and quota handling")
+st.subheader("Optimized for speed and token usage")
 
-# User input
-if prompt := st.chat_input("Ask your question"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-
-# Display conversation
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.write(msg["content"])
-
-# Function to call API with limited retries
 def safe_predict(prompt, max_attempts=1, delay=15):
     for attempt in range(max_attempts):
         try:
@@ -41,21 +37,40 @@ def safe_predict(prompt, max_attempts=1, delay=15):
         except Exception as e:
             error_msg = str(e).lower()
             if ("quota" in error_msg or "429" in error_msg) and attempt < max_attempts - 1:
-                st.warning(f"Quota reached, wait {delay} seconds and retry...")
+                st.warning(f"Quota reached, retrying in {delay} seconds...")
                 time.sleep(delay)
             else:
                 return None
     return None
 
-# Generate response only if last message is user
+# Input prompt with length limit and strip excessive spaces
+if user_prompt := st.chat_input("Your question"):
+    user_prompt = user_prompt.strip()
+    if len(user_prompt) > MAX_INPUT_LENGTH:
+        user_prompt = user_prompt[:MAX_INPUT_LENGTH] + "..."
+
+    # Check cache first
+    if user_prompt in st.session_state.cache:
+        cached_response = st.session_state.cache[user_prompt]
+        st.session_state.messages.append({"role": "user", "content": user_prompt})
+        st.session_state.messages.append({"role": "assistant", "content": cached_response})
+    else:
+        st.session_state.messages.append({"role": "user", "content": user_prompt})
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
+
 if st.session_state.messages[-1]["role"] != "assistant":
-    with st.chat_message("assistant"), st.spinner("Processing..."):
+    prompt = st.session_state.messages[-1]["content"]
+    with st.chat_message("assistant"), st.spinner("Thinking..."):
         response = safe_predict(prompt)
         if response:
             st.write(response)
+            # Cache the response for repeated queries
+            st.session_state.cache[prompt] = response
             st.session_state.messages.append({"role": "assistant", "content": response})
         else:
-            msg = "API quota exceeded or error. Please try again later."
-            st.error(msg)
-            st.session_state.messages.append({"role": "assistant", "content": msg})
-
+            error_msg = "API quota exceeded or error. Please try again later."
+            st.error(error_msg)
+            st.session_state.messages.append({"role": "assistant", "content": error_msg})
