@@ -28,7 +28,7 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", location="global")
 conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
 
 st.title("🗣️ Conversational Chatbot sam-bot")
-st.subheader("Optimized for speed and token usage")
+st.subheader("AI Chatbot")
 
 def safe_predict(prompt, max_attempts=1, delay=15):
     for attempt in range(max_attempts):
