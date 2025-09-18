@@ -7,14 +7,38 @@ import os
 import time
 from PIL import Image
 
-# Custom CSS to hide unwanted drag/drop and browse instructions
+# Custom CSS to hide unwanted buttons and expand the clip icon
 st.markdown("""
     <style>
-    /* Hide 'Drag and drop file here' and 'Browse files' text in uploader */
+    /* Hide default 'Browse files' button and instructions */
     [data-testid="stFileUploaderDropzoneInstructions"] {display: none !important;}
-    [data-testid="stFileUploaderDropzone"] {height: 48px; min-height: 48px;}
-    /* Make the uploader dropzone very compact */
-    [data-testid="stFileUploaderDropzone"] > div {padding: 0 !important;}
+    button[aria-label="Browse files"] {display: none !important;}
+    /* Make the dropzone fill its container and show only clip symbol */
+    [data-testid="stFileUploaderDropzone"] {
+        border: none !important;
+        background: none !important;
+        box-shadow: none !important;
+        width: 100%;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #888;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+    }
+    /* Replace dropzone with a large clip icon */
+    [data-testid="stFileUploaderDropzone"]::before {
+        content: "📎";
+        font-size: 2.2rem;
+        color: #888;
+        display: block;
+        text-align: center;
+        width: 100%;
+        pointer-events: none;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -34,18 +58,17 @@ conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
 st.title("🗣️ Conversational Chatbot sam-bot")
 st.subheader("AI Chatbot")
 
-# Layout: chat input + file uploader side-by-side
-col1, col2 = st.columns([9,1])
+# Layout: chat input + custom file uploader side-by-side, matching sizes
+col1, col2 = st.columns([9,1], gap="small")
 
 with col1:
     user_prompt = st.chat_input("Your question")
 
 with col2:
-    # File uploader with only clip icon
     uploaded_file = st.file_uploader(
-        label="📎",
+        label="",
         type=["png", "jpg", "jpeg", "pdf", "csv", "txt"],
-        label_visibility="collapsed",
+        label_visibility="hidden",
         key="file_upload"
     )
 
