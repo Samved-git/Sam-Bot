@@ -7,7 +7,17 @@ import os
 import time
 from PIL import Image
 
-# Load API key
+# Custom CSS to hide unwanted drag/drop and browse instructions
+st.markdown("""
+    <style>
+    /* Hide 'Drag and drop file here' and 'Browse files' text in uploader */
+    [data-testid="stFileUploaderDropzoneInstructions"] {display: none !important;}
+    [data-testid="stFileUploaderDropzone"] {height: 48px; min-height: 48px;}
+    /* Make the uploader dropzone very compact */
+    [data-testid="stFileUploaderDropzone"] > div {padding: 0 !important;}
+    </style>
+""", unsafe_allow_html=True)
+
 os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
 MAX_INPUT_LENGTH = 200
 
@@ -31,9 +41,9 @@ with col1:
     user_prompt = st.chat_input("Your question")
 
 with col2:
-    # File uploader with collapsed label to remove drag/drop text
+    # File uploader with only clip icon
     uploaded_file = st.file_uploader(
-        label="📎",  # Unicode clip icon, but label hidden
+        label="📎",
         type=["png", "jpg", "jpeg", "pdf", "csv", "txt"],
         label_visibility="collapsed",
         key="file_upload"
