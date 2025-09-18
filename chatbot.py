@@ -24,18 +24,16 @@ conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
 st.title("🗣️ Conversational Chatbot sam-bot")
 st.subheader("AI Chatbot")
 
-uploaded_file = None
-
-# Arrange chat input and file uploader side by side with columns
+# Layout: chat input + file uploader side-by-side
 col1, col2 = st.columns([9,1])
 
 with col1:
     user_prompt = st.chat_input("Your question")
 
 with col2:
-    # File uploader with clip (📎) label hidden for compact UI
+    # File uploader with collapsed label to remove drag/drop text
     uploaded_file = st.file_uploader(
-        label="📎",
+        label="📎",  # Unicode clip icon, but label hidden
         type=["png", "jpg", "jpeg", "pdf", "csv", "txt"],
         label_visibility="collapsed",
         key="file_upload"
