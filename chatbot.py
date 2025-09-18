@@ -7,54 +7,45 @@ import os
 import time
 from PIL import Image
 
-os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
-MAX_INPUT_LENGTH = 200
-
-if 'buffer_memory' not in st.session_state:
-    st.session_state.buffer_memory = ConversationBufferWindowMemory(k=2, return_messages=True)
-if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "How can I help you today?"}]
-if "cache" not in st.session_state:
-    st.session_state.cache = {}
-
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", location="global")
-conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
-
-# Custom dark theme CSS for coding perspective
+# Custom dark background and styling for coding-friendly UI
 st.markdown(
     """
     <style>
-    /* Dark background and text */
-    .main {
-        background-color: #1e1e1e;  /* terminal dark */
-        color: #d4d4d4;  /* light gray text */
-        font-family: Consolas, "Courier New", monospace;
+    /* Full app dark background */
+    .appview-container, .main, [data-testid="stAppViewContainer"] {
+        background-color: #1e1e1e !important;
+        color: #d4d4d4 !important;
+        font-family: Consolas, "Courier New", monospace !important;
+        min-height: 100vh;
     }
-    /* Chat messages background */
+    /* Sidebar dark background */
+    .css-1d391kg, .css-1v3fvcr {
+        background-color: #252526 !important;
+        color: #d4d4d4 !important;
+    }
+    /* Chat message bubbles */
     .st-chat-message {
         background-color: #2d2d2d !important;
         border-radius: 8px;
         padding: 10px 15px;
         margin-bottom: 8px;
     }
-    /* User messages */
     div.st-chat-message[data-builtin-role="user"] {
         background-color: #094771 !important;
         color: white !important;
     }
-    /* Assistant messages */
     div.st-chat-message[data-builtin-role="assistant"] {
         background-color: #007acc !important;
         color: white !important;
     }
-    /* Chat input style */
+    /* Input box styling */
     div[data-baseweb="input"] > input {
         background-color: #252526 !important;
         color: #d4d4d4 !important;
         border-radius: 6px !important;
         border: 1px solid #333333 !important;
     }
-    /* Scrollbar for message pane */
+    /* Scrollbar styling */
     ::-webkit-scrollbar {
         width: 8px;
     }
@@ -71,10 +62,22 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
+MAX_INPUT_LENGTH = 200
+
+if 'buffer_memory' not in st.session_state:
+    st.session_state.buffer_memory = ConversationBufferWindowMemory(k=2, return_messages=True)
+if "messages" not in st.session_state:
+    st.session_state.messages = [{"role": "assistant", "content": "How can I help you today?"}]
+if "cache" not in st.session_state:
+    st.session_state.cache = {}
+
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", location="global")
+conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
+
 st.title("🗣️ Conversational Chatbot sam-bot")
 st.subheader("AI Chatbot")
 
-# Layout: chat input + clip icon button
 col1, col2 = st.columns([9,1], gap="small")
 with col1:
     user_prompt = st.chat_input("Your question")
