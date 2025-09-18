@@ -76,6 +76,9 @@ if "cache" not in st.session_state:
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", location="global")
 conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
 
+if 'uploaded_file' not in st.session_state:
+    st.session_state.uploaded_file = None
+
 st.title("🗣️ Conversational Chatbot sam-bot")
 st.subheader("AI Chatbot")
 
@@ -85,7 +88,6 @@ with col1:
 with col2:
     open_upload = st.button("📎", help="Attach file", use_container_width=True)
 
-uploaded_file = None
 if open_upload:
     uploaded_file = st.file_uploader(
         label="",
@@ -93,8 +95,11 @@ if open_upload:
         label_visibility="hidden",
         key="file_upload_modal"
     )
+    if uploaded_file is not None:
+        st.session_state.uploaded_file = uploaded_file
 
-if uploaded_file is not None:
+if st.session_state.uploaded_file is not None:
+    uploaded_file = st.session_state.uploaded_file
     st.info(f"Uploaded file: {uploaded_file.name}")
     if uploaded_file.type.startswith("image/"):
         image = Image.open(uploaded_file)
