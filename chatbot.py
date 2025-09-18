@@ -14,7 +14,6 @@ try:
 except ImportError:
     PyPDF2 = None
 
-# UI Styling - light coding theme
 st.markdown(
     """
     <style>
@@ -80,7 +79,7 @@ with col2:
 if open_upload:
     uploaded_file = st.file_uploader(
         label="",
-        type=["png", "jpg", "jpeg", "pdf", "csv", "txt"],
+        type=["png", "jpg", "jpeg", "pdf", "csv", "txt"],  # Includes txt here
         label_visibility="hidden",
         key="file_upload_modal"
     )
@@ -88,7 +87,6 @@ if open_upload:
         st.session_state.uploaded_file_bytes = uploaded_file.read()
         st.session_state.uploaded_file_name = uploaded_file.name
         st.session_state.uploaded_file_type = uploaded_file.type
-        # Rewind for repeated reads
         uploaded_file = io.BytesIO(st.session_state.uploaded_file_bytes)
         file_type = st.session_state.uploaded_file_type
         if file_type.startswith("image/"):
@@ -102,12 +100,12 @@ if open_upload:
         elif file_type == "text/csv":
             df = pd.read_csv(uploaded_file)
             st.session_state.attached_content = df.to_string(index=False)[:2000]
-        elif file_type == "text/plain":
+        elif file_type == "text/plain" or uploaded_file.name.endswith(".txt"):
+            uploaded_file.seek(0)
             st.session_state.attached_content = uploaded_file.read().decode("utf-8")[:2000]
         else:
             st.session_state.attached_content = "Unsupported file type."
 
-# Display uploaded file persistently
 if st.session_state.uploaded_file_bytes is not None:
     uploaded_file = io.BytesIO(st.session_state.uploaded_file_bytes)
     st.info(f"Attached file: {st.session_state.uploaded_file_name}")
@@ -120,8 +118,7 @@ if st.session_state.uploaded_file_bytes is not None:
         uploaded_file.seek(0)
         df = pd.read_csv(uploaded_file)
         st.write(df)
-    elif st.session_state.uploaded_file_type == "text/plain":
-        # text already stored in attached_content
+    elif st.session_state.uploaded_file_type == "text/plain" or st.session_state.uploaded_file_name.endswith(".txt"):
         st.write(st.session_state.attached_content)
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", location="global")
