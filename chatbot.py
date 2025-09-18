@@ -6,15 +6,15 @@ from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from PIL import Image
 import pandas as pd
+import io
 import os
 
-# Optional additional imports for PDF processing
 try:
     import PyPDF2
 except ImportError:
     PyPDF2 = None
 
-# Custom UI styling for light coding theme
+# UI Styling - light coding theme
 st.markdown(
     """
     <style>
@@ -61,8 +61,12 @@ if "cache" not in st.session_state:
     st.session_state.cache = {}
 if "attached_content" not in st.session_state:
     st.session_state.attached_content = ""
-if "uploaded_file" not in st.session_state:
-    st.session_state.uploaded_file = None
+if "uploaded_file_bytes" not in st.session_state:
+    st.session_state.uploaded_file_bytes = None
+if "uploaded_file_name" not in st.session_state:
+    st.session_state.uploaded_file_name = None
+if "uploaded_file_type" not in st.session_state:
+    st.session_state.uploaded_file_type = None
 
 st.title("🗣️ Conversational Chatbot sam-bot")
 st.subheader("AI Chatbot")
@@ -81,11 +85,14 @@ if open_upload:
         key="file_upload_modal"
     )
     if uploaded_file is not None:
-        st.session_state.uploaded_file = uploaded_file
-        file_type = uploaded_file.type
-        attached_content = ""
+        st.session_state.uploaded_file_bytes = uploaded_file.read()
+        st.session_state.uploaded_file_name = uploaded_file.name
+        st.session_state.uploaded_file_type = uploaded_file.type
+        # Rewind for repeated reads
+        uploaded_file = io.BytesIO(st.session_state.uploaded_file_bytes)
+        file_type = st.session_state.uploaded_file_type
         if file_type.startswith("image/"):
-            st.session_state.attached_content = "Image file attached: " + uploaded_file.name
+            st.session_state.attached_content = "Image file attached: " + st.session_state.uploaded_file_name
         elif file_type == "application/pdf" and PyPDF2 is not None:
             pdf_reader = PyPDF2.PdfReader(uploaded_file)
             text = ""
@@ -100,18 +107,21 @@ if open_upload:
         else:
             st.session_state.attached_content = "Unsupported file type."
 
-if st.session_state.uploaded_file is not None:
-    uploaded_file = st.session_state.uploaded_file
-    st.info(f"Attached file: {uploaded_file.name}")
-    if uploaded_file.type.startswith("image/"):
+# Display uploaded file persistently
+if st.session_state.uploaded_file_bytes is not None:
+    uploaded_file = io.BytesIO(st.session_state.uploaded_file_bytes)
+    st.info(f"Attached file: {st.session_state.uploaded_file_name}")
+    if st.session_state.uploaded_file_type.startswith("image/"):
         image = Image.open(uploaded_file)
-        st.image(image, caption=f"Preview: {uploaded_file.name}", use_column_width=True)
-    elif uploaded_file.type == "application/pdf":
+        st.image(image, caption=f"Preview: {st.session_state.uploaded_file_name}", use_column_width=True)
+    elif st.session_state.uploaded_file_type == "application/pdf":
         st.write("PDF content included in chat context.")
-    elif uploaded_file.type == "text/csv":
+    elif st.session_state.uploaded_file_type == "text/csv":
+        uploaded_file.seek(0)
         df = pd.read_csv(uploaded_file)
         st.write(df)
-    elif uploaded_file.type == "text/plain":
+    elif st.session_state.uploaded_file_type == "text/plain":
+        # text already stored in attached_content
         st.write(st.session_state.attached_content)
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", location="global")
