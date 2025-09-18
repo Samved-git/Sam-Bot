@@ -116,4 +116,4 @@ if st.session_state.messages[-1]["role"] != "assistant":
         else:
             error_msg = "API quota exceeded or error. Please try again later."
             st.error(error_msg)
-            st.session_state.messages.append({"role": "assistant", "content": error_msg)
+            st.session_state.messages.append({"role": "assistant", "content": error_msg})
