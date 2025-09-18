@@ -16,7 +16,7 @@ except ImportError:
 st.title("🗣️ Conversational Chatbot sam-bot")
 st.subheader("AI Chatbot")
 
-# Initialize session_state items
+# Session state initialization for persistence
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "assistant", "content": "How can I help you today?"}]
 if "buffer_memory" not in st.session_state:
@@ -28,9 +28,7 @@ if "uploaded_file" not in st.session_state:
 if "attached_text" not in st.session_state:
     st.session_state.attached_text = ""
 
-os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
-
-# Layout: input and clip upload button side by side
+# Layout for input and upload side by side
 col1, col2 = st.columns([9, 1], gap="small")
 
 with col1:
@@ -38,7 +36,6 @@ with col1:
 with col2:
     upload_clicked = st.button("📎", help="Attach a file")
 
-uploaded_file = None
 if upload_clicked:
     uploaded_file = st.file_uploader(
         label="Upload file",
@@ -51,7 +48,7 @@ if upload_clicked:
         # Read and parse content to attached_text
         try:
             if uploaded_file.type.startswith("image/"):
-                st.session_state.attached_text = f"An image file named {uploaded_file.name} is uploaded."
+                st.session_state.attached_text = f"[IMAGE FILE: {uploaded_file.name}]"
             elif uploaded_file.type == "application/pdf" and PyPDF2 is not None:
                 pdf_reader = PyPDF2.PdfReader(uploaded_file)
                 text = ""
@@ -69,21 +66,24 @@ if upload_clicked:
         except Exception as e:
             st.session_state.attached_text = "Error reading file content."
 
-# Show uploaded file info & preview persistently
+# ----- Show Uploaded Document -----
 if st.session_state.uploaded_file is not None:
     f = st.session_state.uploaded_file
     st.info(f"Attached file: {f.name}")
     try:
         if f.type.startswith("image/"):
-            image = Image.open(f)
-            st.image(image, caption=f.name, use_column_width=True)
+            st.image(f, caption=f.name, use_column_width=True)
+            st.write("This image is now context for your questions.")
         elif f.type == "application/pdf":
-            st.write("PDF document loaded for chat context.")
+            st.write("PDF document. Content below is now context for chat:")
+            st.write(st.session_state.attached_text)
         elif f.type == "text/csv":
             df = pd.read_csv(f)
             st.write(df)
+            st.write("CSV table above is now context for chat.")
         elif f.type == "text/plain" or f.name.endswith(".txt"):
             st.write(st.session_state.attached_text)
+            st.write("Text above is now context for chat.")
     except Exception as e:
         st.error(f"Error displaying attached file: {str(e)}")
 
@@ -92,9 +92,11 @@ conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
 
 def safe_predict(prompt, max_attempts=1, delay=15):
     full_prompt = prompt
-    if st.session_state.attached_text:
-        full_prompt = f"Context - attached file content:\n{st.session_state.attached_text}\n\nUser question: {prompt}"
-
+    context = st.session_state.attached_text
+    if context and context != "[IMAGE FILE: {}]".format(getattr(st.session_state.uploaded_file, "name", "")):
+        full_prompt = f"Attached file content/context:\n{context}\n\nUser question: {prompt}"
+    elif context.startswith("[IMAGE FILE:"):
+        full_prompt = f"There's an image file attached named {getattr(st.session_state.uploaded_file, 'name', '')}. User question: {prompt}"
     for attempt in range(max_attempts):
         try:
             return conversation.predict(input=full_prompt)
