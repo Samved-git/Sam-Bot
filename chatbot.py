@@ -7,41 +7,6 @@ import os
 import time
 from PIL import Image
 
-# Custom CSS to hide unwanted buttons and expand the clip icon
-st.markdown("""
-    <style>
-    /* Hide default 'Browse files' button and instructions */
-    [data-testid="stFileUploaderDropzoneInstructions"] {display: none !important;}
-    button[aria-label="Browse files"] {display: none !important;}
-    /* Make the dropzone fill its container and show only clip symbol */
-    [data-testid="stFileUploaderDropzone"] {
-        border: none !important;
-        background: none !important;
-        box-shadow: none !important;
-        width: 100%;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.5rem;
-        color: #888;
-        cursor: pointer;
-        padding: 0;
-        margin: 0;
-    }
-    /* Replace dropzone with a large clip icon */
-    [data-testid="stFileUploaderDropzone"]::before {
-        content: "📎";
-        font-size: 2.2rem;
-        color: #888;
-        display: block;
-        text-align: center;
-        width: 100%;
-        pointer-events: none;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
 MAX_INPUT_LENGTH = 200
 
@@ -58,18 +23,20 @@ conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
 st.title("🗣️ Conversational Chatbot sam-bot")
 st.subheader("AI Chatbot")
 
-# Layout: chat input + custom file uploader side-by-side, matching sizes
+# --- Layout: chat input + clip icon button ---
 col1, col2 = st.columns([9,1], gap="small")
-
 with col1:
     user_prompt = st.chat_input("Your question")
-
 with col2:
+    open_upload = st.button("📎", help="Attach file", use_container_width=True)
+    uploaded_file = None
+
+if open_upload:
     uploaded_file = st.file_uploader(
         label="",
         type=["png", "jpg", "jpeg", "pdf", "csv", "txt"],
         label_visibility="hidden",
-        key="file_upload"
+        key="file_upload_modal"
     )
 
 if uploaded_file is not None:
