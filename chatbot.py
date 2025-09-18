@@ -24,27 +24,36 @@ conversation = ConversationChain(memory=st.session_state.buffer_memory, llm=llm)
 st.title("🗣️ Conversational Chatbot sam-bot")
 st.subheader("AI Chatbot")
 
-# Minimal clip icon for upload and hidden label
-with st.sidebar:
+uploaded_file = None
+
+# Arrange chat input and file uploader side by side with columns
+col1, col2 = st.columns([9,1])
+
+with col1:
+    user_prompt = st.chat_input("Your question")
+
+with col2:
+    # File uploader with clip (📎) label hidden for compact UI
     uploaded_file = st.file_uploader(
-        label="📎",  # Use clip icon as the label
+        label="📎",
         type=["png", "jpg", "jpeg", "pdf", "csv", "txt"],
-        label_visibility="collapsed",  # Hide label for compact UI
-        key="clip_upload"
+        label_visibility="collapsed",
+        key="file_upload"
     )
-    if uploaded_file is not None:
-        st.info(f"Uploaded file: {uploaded_file.name}")
-        if uploaded_file.type.startswith("image/"):
-            image = Image.open(uploaded_file)
-            st.image(image, caption=f"Preview: {uploaded_file.name}", use_column_width=True)
-        elif uploaded_file.type == "application/pdf":
-            st.write("PDF uploaded.")
-        elif uploaded_file.type == "text/csv":
-            import pandas as pd
-            data = pd.read_csv(uploaded_file)
-            st.write(data)
-        elif uploaded_file.type == "text/plain":
-            st.write(uploaded_file.read().decode("utf-8"))
+
+if uploaded_file is not None:
+    st.info(f"Uploaded file: {uploaded_file.name}")
+    if uploaded_file.type.startswith("image/"):
+        image = Image.open(uploaded_file)
+        st.image(image, caption=f"Preview: {uploaded_file.name}", use_column_width=True)
+    elif uploaded_file.type == "application/pdf":
+        st.write("PDF uploaded.")
+    elif uploaded_file.type == "text/csv":
+        import pandas as pd
+        data = pd.read_csv(uploaded_file)
+        st.write(data)
+    elif uploaded_file.type == "text/plain":
+        st.write(uploaded_file.read().decode("utf-8"))
 
 def safe_predict(prompt, max_attempts=1, delay=15):
     for attempt in range(max_attempts):
@@ -59,11 +68,10 @@ def safe_predict(prompt, max_attempts=1, delay=15):
                 return None
     return None
 
-if user_prompt := st.chat_input("Your question"):
+if user_prompt:
     user_prompt = user_prompt.strip()
     if len(user_prompt) > MAX_INPUT_LENGTH:
         user_prompt = user_prompt[:MAX_INPUT_LENGTH] + "..."
-    # Check cache first
     if user_prompt in st.session_state.cache:
         cached_response = st.session_state.cache[user_prompt]
         st.session_state.messages.append({"role": "user", "content": user_prompt})
@@ -75,7 +83,7 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
-if st.session_state.messages[-1]["role"] != "assistant":
+if st.session_state.messages[-1]["role"] != "assistant" and st.session_state.messages[-1]["role"] == "user":
     prompt = st.session_state.messages[-1]["content"]
     with st.chat_message("assistant"), st.spinner("Thinking..."):
         response = safe_predict(prompt)
