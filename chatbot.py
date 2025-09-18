@@ -23,27 +23,6 @@ st.markdown(
         font-family: Consolas, "Courier New", monospace !important;
         min-height: 100vh;
     }
-    .st-chat-message {
-        background-color: #e1e4e8 !important;
-        border-radius: 8px;
-        padding: 10px 15px;
-        margin-bottom: 8px;
-        color: #222222 !important;
-    }
-    div.st-chat-message[data-builtin-role="user"] {
-        background-color: #d1e7ff !important;
-        color: #003366 !important;
-    }
-    div.st-chat-message[data-builtin-role="assistant"] {
-        background-color: #a8c0ff !important;
-        color: #002244 !important;
-    }
-    div[data-baseweb="input"] > input {
-        background-color: #ffffff !important;
-        color: #333333 !important;
-        border-radius: 6px !important;
-        border: 1px solid #cccccc !important;
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -76,10 +55,11 @@ with col1:
 with col2:
     open_upload = st.button("📎", help="Attach file", use_container_width=True)
 
+uploaded_file = None
 if open_upload:
     uploaded_file = st.file_uploader(
         label="",
-        type=["png", "jpg", "jpeg", "pdf", "csv", "txt"],  # Includes txt here
+        type=["png", "jpg", "jpeg", "pdf", "csv", "txt"],  # Accept .txt too
         label_visibility="hidden",
         key="file_upload_modal"
     )
@@ -87,36 +67,37 @@ if open_upload:
         st.session_state.uploaded_file_bytes = uploaded_file.read()
         st.session_state.uploaded_file_name = uploaded_file.name
         st.session_state.uploaded_file_type = uploaded_file.type
-        uploaded_file = io.BytesIO(st.session_state.uploaded_file_bytes)
         file_type = st.session_state.uploaded_file_type
+        file_bytes_io = io.BytesIO(st.session_state.uploaded_file_bytes)
         if file_type.startswith("image/"):
             st.session_state.attached_content = "Image file attached: " + st.session_state.uploaded_file_name
         elif file_type == "application/pdf" and PyPDF2 is not None:
-            pdf_reader = PyPDF2.PdfReader(uploaded_file)
+            pdf_reader = PyPDF2.PdfReader(file_bytes_io)
             text = ""
             for page in pdf_reader.pages:
                 text += page.extract_text() or ""
             st.session_state.attached_content = text.strip()[:2000]
         elif file_type == "text/csv":
-            df = pd.read_csv(uploaded_file)
+            df = pd.read_csv(file_bytes_io)
             st.session_state.attached_content = df.to_string(index=False)[:2000]
-        elif file_type == "text/plain" or uploaded_file.name.endswith(".txt"):
-            uploaded_file.seek(0)
-            st.session_state.attached_content = uploaded_file.read().decode("utf-8")[:2000]
+        elif file_type == "text/plain" or st.session_state.uploaded_file_name.endswith(".txt"):
+            file_bytes_io.seek(0)
+            st.session_state.attached_content = file_bytes_io.read().decode("utf-8")[:2000]
         else:
             st.session_state.attached_content = "Unsupported file type."
 
+# Always show current uploaded file
 if st.session_state.uploaded_file_bytes is not None:
-    uploaded_file = io.BytesIO(st.session_state.uploaded_file_bytes)
+    file_bytes_io = io.BytesIO(st.session_state.uploaded_file_bytes)
     st.info(f"Attached file: {st.session_state.uploaded_file_name}")
     if st.session_state.uploaded_file_type.startswith("image/"):
-        image = Image.open(uploaded_file)
+        image = Image.open(file_bytes_io)
         st.image(image, caption=f"Preview: {st.session_state.uploaded_file_name}", use_column_width=True)
     elif st.session_state.uploaded_file_type == "application/pdf":
         st.write("PDF content included in chat context.")
     elif st.session_state.uploaded_file_type == "text/csv":
-        uploaded_file.seek(0)
-        df = pd.read_csv(uploaded_file)
+        file_bytes_io.seek(0)
+        df = pd.read_csv(file_bytes_io)
         st.write(df)
     elif st.session_state.uploaded_file_type == "text/plain" or st.session_state.uploaded_file_name.endswith(".txt"):
         st.write(st.session_state.attached_content)
