@@ -7,55 +7,56 @@ import os
 import time
 from PIL import Image
 
-# Custom dark background and styling for coding-friendly UI
+# Custom light and clean theme with good contrast for coding
 st.markdown(
     """
     <style>
-    /* Full app dark background */
+    /* Light background and text colors */
     .appview-container, .main, [data-testid="stAppViewContainer"] {
-        background-color: #1e1e1e !important;
-        color: #d4d4d4 !important;
+        background-color: #f9fafb !important; /* very light gray */
+        color: #333333 !important;
         font-family: Consolas, "Courier New", monospace !important;
         min-height: 100vh;
     }
-    /* Sidebar dark background */
+    /* Sidebar light background */
     .css-1d391kg, .css-1v3fvcr {
-        background-color: #252526 !important;
-        color: #d4d4d4 !important;
+        background-color: #ffffff !important;
+        color: #333333 !important;
     }
     /* Chat message bubbles */
     .st-chat-message {
-        background-color: #2d2d2d !important;
+        background-color: #e1e4e8 !important; /* light blue-gray */
         border-radius: 8px;
         padding: 10px 15px;
         margin-bottom: 8px;
+        color: #222222 !important;
     }
     div.st-chat-message[data-builtin-role="user"] {
-        background-color: #094771 !important;
-        color: white !important;
+        background-color: #d1e7ff !important; /* lighter blue */
+        color: #003366 !important;
     }
     div.st-chat-message[data-builtin-role="assistant"] {
-        background-color: #007acc !important;
-        color: white !important;
+        background-color: #a8c0ff !important; /* soft blue */
+        color: #002244 !important;
     }
-    /* Input box styling */
+    /* Chat input box styling */
     div[data-baseweb="input"] > input {
-        background-color: #252526 !important;
-        color: #d4d4d4 !important;
+        background-color: #ffffff !important;
+        color: #333333 !important;
         border-radius: 6px !important;
-        border: 1px solid #333333 !important;
+        border: 1px solid #cccccc !important;
     }
     /* Scrollbar styling */
     ::-webkit-scrollbar {
         width: 8px;
     }
     ::-webkit-scrollbar-track {
-        background: #1e1e1e;
+        background: #f9fafb;
     }
     ::-webkit-scrollbar-thumb {
-        background-color: #555555;
+        background-color: #b0b0b0;
         border-radius: 20px;
-        border: 2px solid #1e1e1e;
+        border: 2px solid #f9fafb;
     }
     </style>
     """,
